@@ -20,7 +20,7 @@ pub fn matches(a: String, c: String) -> Bool {
   a == c
 }
 
-pub fn is_epilson(a: String) -> Bool {
+pub fn is_epsilon(a: String) -> Bool {
   a == "ε"
 }
 
@@ -35,5 +35,5 @@ pub fn unshift_transistion(
   transitions: List(Transition),
   transition: Transition,
 ) -> List(Transition) {
-  [transition, ..transitions]
+  list.prepend(transitions, transition)
 }

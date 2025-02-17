@@ -103,57 +103,62 @@ pub type StackValue {
   StackValue(i: Int, current_state: state.State)
 }
 
-pub fn compute(engine: EngineNFA, value: String) -> Bool {
+pub fn compute(engine: EngineNFA, input: String) -> Bool {
   let assert Ok(c) = dict.get(engine.states, engine.initial_state)
   let stack = list.prepend([], StackValue(i: 0, current_state: c))
 
+  process_stack(engine.ending_states, stack, c.transitions, input)
+}
+
+fn process_stack(
+  ending_states: List(String),
+  stack: List(StackValue),
+  transitions: List(state.Transition),
+  input: String,
+) -> Bool {
+  io.debug(transitions)
   case stack {
     [] -> False
-    rest -> {
-      let assert Ok(c) = list.last(rest)
-      case
-        list.find(engine.ending_states, fn(x) { x == c.current_state.name })
-      {
-        Ok(_) -> True
-        Error(_) -> {
-          let input = string.slice(value, c.i, 1)
-          process_transitions(
-            list.reverse(c.current_state.transitions),
-            stack,
-            input,
-            c.i,
-          )
-          io.debug(c.current_state.name)
-          False
+    [value, ..rest] -> {
+      case list.contains(ending_states, value.current_state.name) {
+        True -> True
+        False -> {
+          let char = string.slice(input, value.i, 1)
+          let #(new_stack, new_transitions) =
+            process_transition(rest, transitions, char, value.i)
+          process_stack(ending_states, new_stack, new_transitions, input)
         }
       }
     }
   }
 }
 
-fn process_transitions(
-  transitions: List(state.Transition),
+fn process_transition(
   stack: List(StackValue),
-  input: String,
+  transitions: List(state.Transition),
+  char: String,
   index: Int,
-) -> List(StackValue) {
+) -> #(List(StackValue), List(state.Transition)) {
   case list.reverse(transitions) {
-    [] -> stack
+    [] -> #(stack, transitions)
+    // we are going through the list from the last item, hence the reverse call
     [#(matcher, to_state), ..rest] -> {
-      case state.matches(matcher, input) {
+      case state.matches(matcher, char) {
         True -> {
-          let i = case state.is_epilson(matcher) {
+          let next_index = case state.is_epsilon(matcher) {
             True -> index
             False -> index + 1
           }
-          process_transitions(
-            rest,
-            list.prepend(stack, StackValue(i: i, current_state: to_state)),
-            input,
-            i,
-          )
+          let new_stack =
+            list.prepend(
+              stack,
+              StackValue(i: next_index, current_state: to_state),
+            )
+          process_transition(new_stack, to_state.transitions, char, next_index)
         }
-        False -> process_transitions(rest, stack, input, index)
+        False -> {
+          process_transition(stack, rest, char, index)
+        }
       }
     }
   }
