@@ -107,57 +107,57 @@ pub fn compute(engine: EngineNFA, input: String) -> Bool {
   let assert Ok(c) = dict.get(engine.states, engine.initial_state)
   let stack = list.prepend([], StackValue(i: 0, current_state: c))
 
-  process_stack(engine.ending_states, stack, c.transitions, input)
+  process_stack(engine, list.reverse(stack), input)
 }
 
 fn process_stack(
-  ending_states: List(String),
+  engine: EngineNFA,
   stack: List(StackValue),
-  transitions: List(state.Transition),
   input: String,
 ) -> Bool {
-  io.debug(transitions)
   case stack {
     [] -> False
     [value, ..rest] -> {
-      case list.contains(ending_states, value.current_state.name) {
+      case list.contains(engine.ending_states, value.current_state.name) {
         True -> True
         False -> {
           let char = string.slice(input, value.i, 1)
-          let #(new_stack, new_transitions) =
-            process_transition(rest, transitions, char, value.i)
-          process_stack(ending_states, new_stack, new_transitions, input)
+          let new_stack =
+            process_transitions(
+              engine,
+              list.reverse(value.current_state.transitions),
+              list.reverse(rest),
+              char,
+              value.i,
+            )
+          process_stack(engine, list.reverse(new_stack), input)
         }
       }
     }
   }
 }
 
-fn process_transition(
-  stack: List(StackValue),
+fn process_transitions(
+  engine: EngineNFA,
   transitions: List(state.Transition),
+  stack: List(StackValue),
   char: String,
   index: Int,
-) -> #(List(StackValue), List(state.Transition)) {
-  case list.reverse(transitions) {
-    [] -> #(stack, transitions)
-    // we are going through the list from the last item, hence the reverse call
+) -> List(StackValue) {
+  case transitions {
+    [] -> stack
     [#(matcher, to_state), ..rest] -> {
       case state.matches(matcher, char) {
         True -> {
-          let next_index = case state.is_epsilon(matcher) {
+          let new_index = case state.is_epsilon(char) {
             True -> index
             False -> index + 1
           }
-          let new_stack =
-            list.prepend(
-              stack,
-              StackValue(i: next_index, current_state: to_state),
-            )
-          process_transition(new_stack, to_state.transitions, char, next_index)
+          let assert Ok(c) = dict.get(engine.states, to_state.name)
+          list.append(stack, [StackValue(i: new_index, current_state: c)])
         }
         False -> {
-          process_transition(stack, rest, char, index)
+          process_transitions(engine, rest, stack, char, index)
         }
       }
     }
