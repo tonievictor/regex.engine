@@ -1,7 +1,7 @@
 import gleam/list
 
 pub type Transition =
-  #(String, State)
+  #(Matcher, State)
 
 pub type State {
   State(
@@ -12,16 +12,29 @@ pub type State {
   )
 }
 
+pub type Matcher {
+  CharacterMatcher(char: String)
+  EpsilonMatcher
+}
+
 pub fn new(name: String) -> State {
   State(name: name, transitions: [], starts_groups: [], end_groups: [])
 }
 
-pub fn matches(a: String, c: String) -> Bool {
-  a == c
+pub fn matches(m: Matcher, c: String) -> Bool {
+  case m {
+    EpsilonMatcher -> True
+    CharacterMatcher(a) -> {
+      a == c
+    }
+  }
 }
 
-pub fn is_epsilon(a: String) -> Bool {
-  a == "ε"
+pub fn is_epsilon(m: Matcher) -> Bool {
+  case m {
+    EpsilonMatcher -> True
+    CharacterMatcher(_) -> False
+  }
 }
 
 pub fn add_transition(

@@ -1,5 +1,4 @@
 import gleam/dict
-import gleam/io
 import gleam/list
 import gleam/string
 import state
@@ -51,7 +50,7 @@ pub fn add_trasition(
   engine: EngineNFA,
   from: String,
   to: String,
-  matcher: String,
+  matcher: state.Matcher,
 ) -> EngineNFA {
   let assert Ok(to_state) = dict.get(engine.states, to)
   let assert Ok(from_state) = dict.get(engine.states, from)
@@ -77,7 +76,7 @@ pub fn unshift_transistion(
   engine: EngineNFA,
   from: String,
   to: String,
-  matcher: String,
+  matcher: state.Matcher,
 ) -> EngineNFA {
   let assert Ok(to_state) = dict.get(engine.states, to)
   let assert Ok(from_state) = dict.get(engine.states, from)
@@ -107,7 +106,7 @@ pub fn compute(engine: EngineNFA, input: String) -> Bool {
   let assert Ok(c) = dict.get(engine.states, engine.initial_state)
   let stack = list.prepend([], StackValue(i: 0, current_state: c))
 
-  process_stack(engine, list.reverse(stack), input)
+  process_stack(engine, stack, input)
 }
 
 fn process_stack(
@@ -115,7 +114,7 @@ fn process_stack(
   stack: List(StackValue),
   input: String,
 ) -> Bool {
-  case stack {
+  case list.reverse(stack) {
     [] -> False
     [value, ..rest] -> {
       case list.contains(engine.ending_states, value.current_state.name) {
@@ -130,7 +129,7 @@ fn process_stack(
               char,
               value.i,
             )
-          process_stack(engine, list.reverse(new_stack), input)
+          process_stack(engine, new_stack, input)
         }
       }
     }
@@ -149,7 +148,7 @@ fn process_transitions(
     [#(matcher, to_state), ..rest] -> {
       case state.matches(matcher, char) {
         True -> {
-          let new_index = case state.is_epsilon(char) {
+          let new_index = case state.is_epsilon(matcher) {
             True -> index
             False -> index + 1
           }
