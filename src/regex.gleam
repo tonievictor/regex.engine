@@ -1,5 +1,6 @@
 import gleam/io
 import nfa
+import parser
 import state
 
 pub fn main() {
@@ -13,9 +14,6 @@ pub fn main() {
     |> nfa.add_trasition("q2", "q2", state.CharacterMatcher("b"))
     |> nfa.add_trasition("q2", "q3", state.EpsilonMatcher)
 
+  parser.parse("a|b*")
   io.debug(nfa.compute(engine, "abbbbbb"))
-  io.debug(nfa.compute(engine, "aabbbbbb"))
-  io.debug(nfa.compute(engine, "ab"))
-  io.debug(nfa.compute(engine, "a"))
-  io.debug(nfa.compute(engine, "abc"))
 }
