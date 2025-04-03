@@ -3,43 +3,43 @@ import gleam/list
 import gleam/string
 import state
 
-pub type EngineNFA {
-  EngineNFA(
+pub type Engine {
+  Engine(
     states: dict.Dict(String, state.State),
     initial_state: String,
     ending_states: List(String),
   )
 }
 
-pub fn new() -> EngineNFA {
-  EngineNFA(states: dict.new(), initial_state: "", ending_states: [])
+pub fn new() -> Engine {
+  Engine(states: dict.new(), initial_state: "", ending_states: [])
 }
 
-pub fn set_initial_state(engine: EngineNFA, state: String) -> EngineNFA {
-  EngineNFA(
+pub fn set_initial_state(engine: Engine, state: String) -> Engine {
+  Engine(
     states: engine.states,
     initial_state: state,
     ending_states: engine.ending_states,
   )
 }
 
-pub fn set_ending_states(engine: EngineNFA, values: List(String)) -> EngineNFA {
-  EngineNFA(
+pub fn set_ending_states(engine: Engine, values: List(String)) -> Engine {
+  Engine(
     states: engine.states,
     initial_state: engine.initial_state,
     ending_states: values,
   )
 }
 
-pub fn add_state(engine: EngineNFA, name: String) -> EngineNFA {
-  EngineNFA(
+pub fn add_state(engine: Engine, name: String) -> Engine {
+  Engine(
     states: dict.insert(engine.states, name, state.new(name)),
     initial_state: engine.initial_state,
     ending_states: engine.ending_states,
   )
 }
 
-pub fn declare_states(engine: EngineNFA, names: List(String)) -> EngineNFA {
+pub fn declare_states(engine: Engine, names: List(String)) -> Engine {
   case names {
     [] -> engine
     [name, ..rest] -> declare_states(add_state(engine, name), rest)
@@ -47,11 +47,11 @@ pub fn declare_states(engine: EngineNFA, names: List(String)) -> EngineNFA {
 }
 
 pub fn add_trasition(
-  engine: EngineNFA,
+  engine: Engine,
   from: String,
   to: String,
   matcher: state.Matcher,
-) -> EngineNFA {
+) -> Engine {
   let assert Ok(to_state) = dict.get(engine.states, to)
   let assert Ok(from_state) = dict.get(engine.states, from)
 
@@ -65,7 +65,7 @@ pub fn add_trasition(
       starts_groups: from_state.starts_groups,
     )
 
-  EngineNFA(
+  Engine(
     states: dict.insert(engine.states, from, new_state),
     initial_state: engine.initial_state,
     ending_states: engine.ending_states,
@@ -73,11 +73,11 @@ pub fn add_trasition(
 }
 
 pub fn unshift_transistion(
-  engine: EngineNFA,
+  engine: Engine,
   from: String,
   to: String,
   matcher: state.Matcher,
-) -> EngineNFA {
+) -> Engine {
   let assert Ok(to_state) = dict.get(engine.states, to)
   let assert Ok(from_state) = dict.get(engine.states, from)
 
@@ -91,7 +91,7 @@ pub fn unshift_transistion(
       starts_groups: from_state.starts_groups,
     )
 
-  EngineNFA(
+  Engine(
     states: dict.insert(engine.states, from, new_state),
     initial_state: engine.initial_state,
     ending_states: engine.ending_states,
@@ -102,7 +102,7 @@ pub type StackValue {
   StackValue(i: Int, current_state: state.State)
 }
 
-pub fn compute(engine: EngineNFA, input: String) -> Bool {
+pub fn compute(engine: Engine, input: String) -> Bool {
   let assert Ok(c) = dict.get(engine.states, engine.initial_state)
   let stack = list.prepend([], StackValue(i: 0, current_state: c))
 
@@ -110,7 +110,7 @@ pub fn compute(engine: EngineNFA, input: String) -> Bool {
 }
 
 fn process_stack(
-  engine: EngineNFA,
+  engine: Engine,
   stack: List(StackValue),
   input: String,
 ) -> Bool {
@@ -137,7 +137,7 @@ fn process_stack(
 }
 
 fn process_transitions(
-  engine: EngineNFA,
+  engine: Engine,
   transitions: List(state.Transition),
   stack: List(StackValue),
   char: String,
