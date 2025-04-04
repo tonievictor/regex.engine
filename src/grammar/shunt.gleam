@@ -1,7 +1,6 @@
 // this module is an implementation of the Shunting-Yard Algorithm 
 // SYA is used to convert the grammar from infix notation to postfix notation
 
-import gleam/io
 import gleam/list
 import grammar/lexer.{
   type OperatorVariant, type Token, Asterix, CParen, Letter, OParen, Operator,

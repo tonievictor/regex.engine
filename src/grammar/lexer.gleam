@@ -36,3 +36,23 @@ pub fn tokenize(
     }
   }
 }
+
+pub fn to_string(tokens: List(Token), output: String) -> String {
+  case tokens {
+    [] -> output
+    [tok, ..rest] -> {
+      case tok {
+        CParen -> to_string(rest, string.append(output, ")"))
+        Letter(char) -> to_string(rest, string.append(output, char))
+        Operator(variant) -> {
+          case variant {
+            OParen -> to_string(rest, string.append(output, "("))
+            Asterix(_) -> to_string(rest, string.append(output, "*"))
+            Plus(_) -> to_string(rest, string.append(output, "+"))
+            QMark(_) -> to_string(rest, string.append(output, "?"))
+          }
+        }
+      }
+    }
+  }
+}

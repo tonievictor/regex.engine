@@ -109,11 +109,7 @@ pub fn compute(engine: Engine, input: String) -> Bool {
   process_stack(engine, stack, input)
 }
 
-fn process_stack(
-  engine: Engine,
-  stack: List(StackValue),
-  input: String,
-) -> Bool {
+fn process_stack(engine: Engine, stack: List(StackValue), input: String) -> Bool {
   case list.reverse(stack) {
     [] -> False
     [value, ..rest] -> {
