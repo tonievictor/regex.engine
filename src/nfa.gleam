@@ -52,8 +52,8 @@ pub fn add_trasition(
   to: String,
   matcher: state.Matcher,
 ) -> Engine {
-  let assert Ok(to_state) = dict.get(engine.states, to)
   let assert Ok(from_state) = dict.get(engine.states, from)
+  let assert Ok(to_state) = dict.get(engine.states, to)
 
   let transitions =
     state.add_transition(from_state.transitions, #(matcher, to_state))
@@ -99,29 +99,29 @@ pub fn unshift_transistion(
 }
 
 pub type StackValue {
-  StackValue(i: Int, current_state: state.State)
+  StackValue(i: Int, curr_state: state.State)
 }
 
 pub fn compute(engine: Engine, input: String) -> Bool {
   let assert Ok(c) = dict.get(engine.states, engine.initial_state)
-  let stack = list.prepend([], StackValue(i: 0, current_state: c))
+  let stack = [StackValue(i: 0, curr_state: c)]
 
   process_stack(engine, stack, input)
 }
 
 fn process_stack(engine: Engine, stack: List(StackValue), input: String) -> Bool {
-  case list.reverse(stack) {
+  case stack {
     [] -> False
     [value, ..rest] -> {
-      case list.contains(engine.ending_states, value.current_state.name) {
+      case list.contains(engine.ending_states, value.curr_state.name) {
         True -> True
         False -> {
           let char = string.slice(input, value.i, 1)
           let new_stack =
             process_transitions(
               engine,
-              list.reverse(value.current_state.transitions),
-              list.reverse(rest),
+              list.reverse(value.curr_state.transitions),
+              rest,
               char,
               value.i,
             )
@@ -149,7 +149,7 @@ fn process_transitions(
             False -> index + 1
           }
           let assert Ok(c) = dict.get(engine.states, to_state.name)
-          list.append(stack, [StackValue(i: new_index, current_state: c)])
+          list.prepend(stack, StackValue(i: new_index, curr_state: c))
         }
         False -> {
           process_transitions(engine, rest, stack, char, index)
