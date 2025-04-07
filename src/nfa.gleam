@@ -99,12 +99,12 @@ pub fn unshift_transistion(
 }
 
 pub type StackValue {
-  StackValue(i: Int, curr_state: state.State, history: List(String))
+  StackValue(i: Int, curr_state: state.State)
 }
 
 pub fn compute(engine: Engine, input: String) -> Bool {
   let assert Ok(c) = dict.get(engine.states, engine.initial_state)
-  let stack = [StackValue(i: 0, curr_state: c, history: [])]
+  let stack = [StackValue(i: 0, curr_state: c)]
 
   process_stack(engine, stack, input)
 }
@@ -123,7 +123,7 @@ fn process_stack(engine: Engine, stack: List(StackValue), input: String) -> Bool
               list.reverse(value.curr_state.transitions),
               rest,
               char,
-              value,
+              value.i,
             )
           process_stack(engine, new_stack, input)
         }
@@ -137,7 +137,7 @@ fn process_transitions(
   transitions: List(state.Transition),
   stack: List(StackValue),
   char: String,
-  curr_stkv: StackValue,
+  index: Int,
 ) -> List(StackValue) {
   case transitions {
     [] -> stack
@@ -145,19 +145,20 @@ fn process_transitions(
       case state.matches(matcher, char) {
         True -> {
           let new_index = case state.is_epsilon(matcher) {
-            True -> curr_stkv.i
-            False -> curr_stkv.i + 1
+            True -> index
+            False -> index + 1
           }
           let assert Ok(c) = dict.get(engine.states, to_state.name)
-          let new_stk =
-            list.prepend(
-              stack,
-              StackValue(i: new_index, curr_state: c, history: []),
-            )
-          process_transitions(engine, rest, new_stk, char, curr_stkv)
+          process_transitions(
+            engine,
+            rest,
+            list.prepend(stack, StackValue(i: new_index, curr_state: c)),
+            char,
+            index,
+          )
         }
         False -> {
-          process_transitions(engine, rest, stack, char, curr_stkv)
+          process_transitions(engine, rest, stack, char, index)
         }
       }
     }
