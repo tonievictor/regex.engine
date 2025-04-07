@@ -81,7 +81,7 @@ fn handle_operator(
   }
 }
 
-// pops all operators from the stack until you find an open parenthese
+// pop all operators from the stack until you find an open parentheses
 // if no corresponding open parentheses is found, return an error
 // on success return a tuple containing the new output and the modified stack.
 fn find_oparen(

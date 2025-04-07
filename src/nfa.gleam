@@ -124,6 +124,8 @@ fn process_stack(engine: Engine, stack: List(StackValue), input: String) -> Bool
               rest,
               char,
               value.i,
+              value.state.name,
+              [],
             )
           process_stack(engine, new_stack, input)
         }
@@ -138,6 +140,8 @@ fn process_transitions(
   stack: List(StackValue),
   char: String,
   index: Int,
+  curr_state: String,
+  history: List(String),
 ) -> List(StackValue) {
   case transitions {
     [] -> stack
@@ -145,20 +149,56 @@ fn process_transitions(
       let assert Ok(to_state) = dict.get(engine.states, to_state.name)
       case state.matches(matcher, char) {
         True -> {
-          let new_index = case state.is_epsilon(matcher) {
-            True -> index
-            False -> index + 1
+          case state.is_epsilon(matcher) {
+            True -> {
+              case list.contains(history, to_state.name) {
+                True -> {
+                  process_transitions(
+                    engine,
+                    rest,
+                    list.prepend(stack, StackValue(i: index, state: to_state)),
+                    char,
+                    index,
+                    curr_state,
+                    history,
+                  )
+                }
+                False -> {
+                  process_transitions(
+                    engine,
+                    rest,
+                    stack,
+                    char,
+                    index,
+                    curr_state,
+                    list.append(history, [curr_state]),
+                  )
+                }
+              }
+            }
+            False -> {
+              process_transitions(
+                engine,
+                rest,
+                list.prepend(stack, StackValue(i: index + 1, state: to_state)),
+                char,
+                index,
+                curr_state,
+                [],
+              )
+            }
           }
+        }
+        False -> {
           process_transitions(
             engine,
             rest,
-            list.prepend(stack, StackValue(i: new_index, state: to_state)),
+            stack,
             char,
             index,
+            curr_state,
+            history,
           )
-        }
-        False -> {
-          process_transitions(engine, rest, stack, char, index)
         }
       }
     }
