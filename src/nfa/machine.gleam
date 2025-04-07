@@ -1,59 +1,59 @@
 import gleam/dict
 import gleam/list
 import gleam/string
-import state
+import nfa/state
 
-pub type Engine {
-  Engine(
+pub type NFA {
+  NFA(
     states: dict.Dict(String, state.State),
     initial_state: String,
     ending_states: List(String),
   )
 }
 
-pub fn new() -> Engine {
-  Engine(states: dict.new(), initial_state: "", ending_states: [])
+pub fn new(_input: String) -> NFA {
+  NFA(states: dict.new(), initial_state: "", ending_states: [])
 }
 
-pub fn set_initial_state(engine: Engine, state: String) -> Engine {
-  Engine(
-    states: engine.states,
+pub fn set_initial_state(machine: NFA, state: String) -> NFA {
+  NFA(
+    states: machine.states,
     initial_state: state,
-    ending_states: engine.ending_states,
+    ending_states: machine.ending_states,
   )
 }
 
-pub fn set_ending_states(engine: Engine, values: List(String)) -> Engine {
-  Engine(
-    states: engine.states,
-    initial_state: engine.initial_state,
+pub fn set_ending_states(machine: NFA, values: List(String)) -> NFA {
+  NFA(
+    states: machine.states,
+    initial_state: machine.initial_state,
     ending_states: values,
   )
 }
 
-pub fn add_state(engine: Engine, name: String) -> Engine {
-  Engine(
-    states: dict.insert(engine.states, name, state.new(name)),
-    initial_state: engine.initial_state,
-    ending_states: engine.ending_states,
+pub fn add_state(machine: NFA, name: String) -> NFA {
+  NFA(
+    states: dict.insert(machine.states, name, state.new(name)),
+    initial_state: machine.initial_state,
+    ending_states: machine.ending_states,
   )
 }
 
-pub fn declare_states(engine: Engine, names: List(String)) -> Engine {
+pub fn declare_states(machine: NFA, names: List(String)) -> NFA {
   case names {
-    [] -> engine
-    [name, ..rest] -> declare_states(add_state(engine, name), rest)
+    [] -> machine
+    [name, ..rest] -> declare_states(add_state(machine, name), rest)
   }
 }
 
 pub fn add_trasition(
-  engine: Engine,
+  machine: NFA,
   from: String,
   to: String,
   matcher: state.Matcher,
-) -> Engine {
-  let assert Ok(from_state) = dict.get(engine.states, from)
-  let assert Ok(to_state) = dict.get(engine.states, to)
+) -> NFA {
+  let assert Ok(from_state) = dict.get(machine.states, from)
+  let assert Ok(to_state) = dict.get(machine.states, to)
 
   let transitions =
     state.add_transition(from_state.transitions, #(matcher, to_state))
@@ -65,21 +65,21 @@ pub fn add_trasition(
       starts_groups: from_state.starts_groups,
     )
 
-  Engine(
-    states: dict.insert(engine.states, from, new_state),
-    initial_state: engine.initial_state,
-    ending_states: engine.ending_states,
+  NFA(
+    states: dict.insert(machine.states, from, new_state),
+    initial_state: machine.initial_state,
+    ending_states: machine.ending_states,
   )
 }
 
 pub fn unshift_transistion(
-  engine: Engine,
+  machine: NFA,
   from: String,
   to: String,
   matcher: state.Matcher,
-) -> Engine {
-  let assert Ok(to_state) = dict.get(engine.states, to)
-  let assert Ok(from_state) = dict.get(engine.states, from)
+) -> NFA {
+  let assert Ok(to_state) = dict.get(machine.states, to)
+  let assert Ok(from_state) = dict.get(machine.states, from)
 
   let transitions =
     state.unshift_transistion(from_state.transitions, #(matcher, to_state))
@@ -91,10 +91,10 @@ pub fn unshift_transistion(
       starts_groups: from_state.starts_groups,
     )
 
-  Engine(
-    states: dict.insert(engine.states, from, new_state),
-    initial_state: engine.initial_state,
-    ending_states: engine.ending_states,
+  NFA(
+    states: dict.insert(machine.states, from, new_state),
+    initial_state: machine.initial_state,
+    ending_states: machine.ending_states,
   )
 }
 
@@ -102,24 +102,24 @@ pub type StackValue {
   StackValue(i: Int, state: state.State)
 }
 
-pub fn compute(engine: Engine, input: String) -> Bool {
-  let assert Ok(c) = dict.get(engine.states, engine.initial_state)
+pub fn compute(machine: NFA, input: String) -> Bool {
+  let assert Ok(c) = dict.get(machine.states, machine.initial_state)
   let stack = [StackValue(i: 0, state: c)]
 
-  process_stack(engine, stack, input)
+  process_stack(machine, stack, input)
 }
 
-fn process_stack(engine: Engine, stack: List(StackValue), input: String) -> Bool {
+fn process_stack(machine: NFA, stack: List(StackValue), input: String) -> Bool {
   case stack {
     [] -> False
     [value, ..rest] -> {
-      case list.contains(engine.ending_states, value.state.name) {
+      case list.contains(machine.ending_states, value.state.name) {
         True -> True
         False -> {
           let char = string.slice(input, value.i, 1)
           let new_stack =
             process_transitions(
-              engine,
+              machine,
               list.reverse(value.state.transitions),
               rest,
               char,
@@ -127,7 +127,7 @@ fn process_stack(engine: Engine, stack: List(StackValue), input: String) -> Bool
               value.state.name,
               [],
             )
-          process_stack(engine, new_stack, input)
+          process_stack(machine, new_stack, input)
         }
       }
     }
@@ -135,7 +135,7 @@ fn process_stack(engine: Engine, stack: List(StackValue), input: String) -> Bool
 }
 
 fn process_transitions(
-  engine: Engine,
+  machine: NFA,
   transitions: List(state.Transition),
   stack: List(StackValue),
   char: String,
@@ -146,7 +146,7 @@ fn process_transitions(
   case transitions {
     [] -> stack
     [#(matcher, to_state), ..rest] -> {
-      let assert Ok(to_state) = dict.get(engine.states, to_state.name)
+      let assert Ok(to_state) = dict.get(machine.states, to_state.name)
       case state.matches(matcher, char) {
         True -> {
           case state.is_epsilon(matcher) {
@@ -154,7 +154,7 @@ fn process_transitions(
               case list.contains(history, to_state.name) {
                 True -> {
                   process_transitions(
-                    engine,
+                    machine,
                     rest,
                     list.prepend(stack, StackValue(i: index, state: to_state)),
                     char,
@@ -165,7 +165,7 @@ fn process_transitions(
                 }
                 False -> {
                   process_transitions(
-                    engine,
+                    machine,
                     rest,
                     stack,
                     char,
@@ -178,7 +178,7 @@ fn process_transitions(
             }
             False -> {
               process_transitions(
-                engine,
+                machine,
                 rest,
                 list.prepend(stack, StackValue(i: index + 1, state: to_state)),
                 char,
@@ -191,7 +191,7 @@ fn process_transitions(
         }
         False -> {
           process_transitions(
-            engine,
+            machine,
             rest,
             stack,
             char,
