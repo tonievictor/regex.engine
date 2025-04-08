@@ -26,25 +26,47 @@ pub fn closure(a: machine.NFA) -> machine.NFA {
   |> machine.set_initial_state("p0")
   |> machine.set_ending_states(["p1"])
   |> machine.add_transition("p0", "p1", state.EpsilonMatcher)
-  |> machine.add_transition("p0", "q0", state.EpsilonMatcher)
-  |> machine.add_transition("q1", "q0", state.EpsilonMatcher)
-  |> machine.add_transition("q1", "p1", state.EpsilonMatcher)
+  |> machine.add_transition("p0", a.initial_state, state.EpsilonMatcher)
+  |> from_ending_states(a.ending_states, "p1")
+  |> from_ending_states(a.ending_states, a.initial_state)
 }
 
 pub fn concat(a: machine.NFA, b: machine.NFA) -> machine.NFA {
   let up = update_state_labels(dict.size(a.states), b)
-  let assert Ok(last) = list.last(a.ending_states)
   let machine =
     machine.NFA(
       states: dict.merge(a.states, up.states),
       initial_state: a.initial_state,
       ending_states: b.ending_states,
     )
-  machine.add_transition(machine, last, b.initial_state, state.EpsilonMatcher)
+  from_ending_states(machine, a.ending_states, b.initial_state)
 }
 
-pub fn union() -> machine.NFA {
-  todo
+pub fn union(a: machine.NFA, b: machine.NFA) -> machine.NFA {
+  let states = dict.merge(a.states, b.states)
+
+  machine.NFA(states: states, initial_state: "", ending_states: [])
+  |> machine.declare_states(["p0", "p1"])
+  |> machine.set_initial_state("p0")
+  |> machine.set_ending_states(["p1"])
+  |> machine.add_transition("p0", a.initial_state, state.EpsilonMatcher)
+  |> machine.add_transition("p0", b.initial_state, state.EpsilonMatcher)
+  |> from_ending_states(a.ending_states, "p1")
+  |> from_ending_states(b.ending_states, "p1")
+}
+
+fn from_ending_states(
+  a: machine.NFA,
+  states: List(String),
+  to: String,
+) -> machine.NFA {
+  case states {
+    [] -> a
+    [val, ..rest] -> {
+      machine.add_transition(a, val, to, state.EpsilonMatcher)
+      |> from_ending_states(rest, to)
+    }
+  }
 }
 
 // I ran into an issue while working on the concat expression.
