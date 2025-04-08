@@ -74,10 +74,15 @@ pub fn compute(machine: NFA, input: String) -> Bool {
   let assert Ok(c) = dict.get(machine.states, machine.initial_state)
   let stack = [StackValue(i: 0, state: c)]
 
-  process_stack(machine, stack, input)
+  process_stack(machine, stack, input, [])
 }
 
-fn process_stack(machine: NFA, stack: List(StackValue), input: String) -> Bool {
+fn process_stack(
+  machine: NFA,
+  stack: List(StackValue),
+  input: String,
+  history: List(String),
+) -> Bool {
   case stack {
     [] -> False
     [value, ..rest] -> {
@@ -85,7 +90,7 @@ fn process_stack(machine: NFA, stack: List(StackValue), input: String) -> Bool {
         True -> True
         False -> {
           let char = string.slice(input, value.i, 1)
-          let new_stack =
+          let #(new_stack, new_hist) =
             process_transitions(
               machine,
               list.reverse(value.state.transitions),
@@ -93,9 +98,9 @@ fn process_stack(machine: NFA, stack: List(StackValue), input: String) -> Bool {
               char,
               value.i,
               value.state.name,
-              [],
+              history,
             )
-          process_stack(machine, new_stack, input)
+          process_stack(machine, new_stack, input, new_hist)
         }
       }
     }
@@ -110,9 +115,9 @@ fn process_transitions(
   index: Int,
   curr_state: String,
   history: List(String),
-) -> List(StackValue) {
+) -> #(List(StackValue), List(String)) {
   case transitions {
-    [] -> stack
+    [] -> #(stack, history)
     [#(matcher, to_state), ..rest] -> {
       let assert Ok(to_state) = dict.get(machine.states, to_state.name)
       case state.matches(matcher, char) {
