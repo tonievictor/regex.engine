@@ -11,7 +11,7 @@ pub type NFA {
   )
 }
 
-pub fn new(_input: String) -> NFA {
+pub fn new() -> NFA {
   NFA(states: dict.new(), initial_state: "", ending_states: [])
 }
 
@@ -46,7 +46,7 @@ pub fn declare_states(machine: NFA, names: List(String)) -> NFA {
   }
 }
 
-pub fn add_trasition(
+pub fn add_transition(
   machine: NFA,
   from: String,
   to: String,
