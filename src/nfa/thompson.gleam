@@ -2,10 +2,11 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
+import grammar/lexer.{type Token}
 import nfa/machine
 import nfa/state
 
-pub fn empty_expr() -> machine.NFA {
+fn empty_expr() -> machine.NFA {
   machine.new()
   |> machine.declare_states(["q0", "q1"])
   |> machine.set_initial_state("q0")
@@ -13,7 +14,7 @@ pub fn empty_expr() -> machine.NFA {
   |> machine.add_transition("q0", "q1", state.EpsilonMatcher)
 }
 
-pub fn single_char(char: String) -> machine.NFA {
+fn single_char(char: String) -> machine.NFA {
   machine.new()
   |> machine.declare_states(["q0", "q1"])
   |> machine.set_initial_state("q0")
@@ -21,7 +22,7 @@ pub fn single_char(char: String) -> machine.NFA {
   |> machine.add_transition("q0", "q1", state.CharacterMatcher(char))
 }
 
-pub fn closure(a: machine.NFA) -> machine.NFA {
+fn closure(a: machine.NFA) -> machine.NFA {
   machine.declare_states(a, ["p0", "p1"])
   |> machine.set_initial_state("p0")
   |> machine.set_ending_states(["p1"])
@@ -31,7 +32,7 @@ pub fn closure(a: machine.NFA) -> machine.NFA {
   |> from_ending_states(a.ending_states, a.initial_state)
 }
 
-pub fn concat(a: machine.NFA, b: machine.NFA) -> machine.NFA {
+fn concat(a: machine.NFA, b: machine.NFA) -> machine.NFA {
   let up = update_state_labels(dict.size(a.states), b)
   let machine =
     machine.NFA(
@@ -42,7 +43,7 @@ pub fn concat(a: machine.NFA, b: machine.NFA) -> machine.NFA {
   from_ending_states(machine, a.ending_states, b.initial_state)
 }
 
-pub fn union(a: machine.NFA, b: machine.NFA) -> machine.NFA {
+fn union(a: machine.NFA, b: machine.NFA) -> machine.NFA {
   let states = dict.merge(a.states, b.states)
 
   machine.NFA(states: states, initial_state: "", ending_states: [])

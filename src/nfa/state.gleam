@@ -4,12 +4,7 @@ pub type Transition =
   #(Matcher, State)
 
 pub type State {
-  State(
-    name: String,
-    transitions: List(Transition),
-    starts_groups: List(String),
-    end_groups: List(String),
-  )
+  State(name: String, transitions: List(Transition))
 }
 
 pub type Matcher {
@@ -18,7 +13,7 @@ pub type Matcher {
 }
 
 pub fn new(name: String) -> State {
-  State(name: name, transitions: [], starts_groups: [], end_groups: [])
+  State(name: name, transitions: [])
 }
 
 pub fn matches(m: Matcher, c: String) -> Bool {
@@ -42,11 +37,4 @@ pub fn add_transition(
   transition: Transition,
 ) -> List(Transition) {
   list.append(transitions, [transition])
-}
-
-pub fn unshift_transistion(
-  transitions: List(Transition),
-  transition: Transition,
-) -> List(Transition) {
-  list.prepend(transitions, transition)
 }

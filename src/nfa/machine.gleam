@@ -57,39 +57,7 @@ pub fn add_transition(
 
   let transitions =
     state.add_transition(from_state.transitions, #(matcher, to_state))
-  let new_state =
-    state.State(
-      name: from_state.name,
-      transitions: transitions,
-      end_groups: from_state.end_groups,
-      starts_groups: from_state.starts_groups,
-    )
-
-  NFA(
-    states: dict.insert(machine.states, from, new_state),
-    initial_state: machine.initial_state,
-    ending_states: machine.ending_states,
-  )
-}
-
-pub fn unshift_transistion(
-  machine: NFA,
-  from: String,
-  to: String,
-  matcher: state.Matcher,
-) -> NFA {
-  let assert Ok(to_state) = dict.get(machine.states, to)
-  let assert Ok(from_state) = dict.get(machine.states, from)
-
-  let transitions =
-    state.unshift_transistion(from_state.transitions, #(matcher, to_state))
-  let new_state =
-    state.State(
-      name: from_state.name,
-      transitions: transitions,
-      end_groups: from_state.end_groups,
-      starts_groups: from_state.starts_groups,
-    )
+  let new_state = state.State(name: from_state.name, transitions: transitions)
 
   NFA(
     states: dict.insert(machine.states, from, new_state),
