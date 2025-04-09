@@ -1,4 +1,5 @@
 import gleam/dict
+import gleam/io
 import gleam/list
 import gleam/string
 import nfa/state
@@ -70,7 +71,7 @@ pub type StackValue {
   StackValue(i: Int, state: state.State)
 }
 
-pub fn compute(machine: NFA, input: String) -> Bool {
+pub fn evaluate(machine: NFA, input: String) -> Bool {
   let assert Ok(c) = dict.get(machine.states, machine.initial_state)
   let stack = [StackValue(i: 0, state: c)]
 
@@ -83,9 +84,10 @@ fn process_stack(
   input: String,
   history: List(String),
 ) -> Bool {
+  io.debug(stack)
   case stack {
     [] -> False
-    [value, ..rest] -> {
+    [value] -> {
       case list.contains(machine.ending_states, value.state.name) {
         True -> True
         False -> {
@@ -94,7 +96,7 @@ fn process_stack(
             process_transitions(
               machine,
               list.reverse(value.state.transitions),
-              rest,
+              [],
               char,
               value.i,
               value.state.name,
@@ -103,6 +105,20 @@ fn process_stack(
           process_stack(machine, new_stack, input, new_hist)
         }
       }
+    }
+    [value, ..rest] -> {
+      let char = string.slice(input, value.i, 1)
+      let #(new_stack, new_hist) =
+        process_transitions(
+          machine,
+          list.reverse(value.state.transitions),
+          rest,
+          char,
+          value.i,
+          value.state.name,
+          history,
+        )
+      process_stack(machine, new_stack, input, new_hist)
     }
   }
 }
@@ -129,7 +145,7 @@ fn process_transitions(
                   process_transitions(
                     machine,
                     rest,
-                    list.prepend(stack, StackValue(i: index, state: to_state)),
+                    stack,
                     char,
                     index,
                     curr_state,
@@ -140,7 +156,7 @@ fn process_transitions(
                   process_transitions(
                     machine,
                     rest,
-                    stack,
+                    list.prepend(stack, StackValue(i: index, state: to_state)),
                     char,
                     index,
                     curr_state,
