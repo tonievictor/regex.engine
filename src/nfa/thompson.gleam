@@ -2,8 +2,83 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
+import grammar.{type Token, Asterix, Letter, Operator, Plus, QMark}
 import nfa/machine
 import nfa/state
+
+pub fn to_nfa(input: List(Token)) -> Result(machine.NFA, String) {
+  to_nfa_loop(input, machine.new(), [])
+}
+
+fn to_nfa_loop(
+  input: List(Token),
+  output: machine.NFA,
+  stack: List(machine.NFA),
+) -> Result(machine.NFA, String) {
+  case input {
+    [] -> Ok(output)
+    [tok, ..rest] -> {
+      case tok {
+        Letter(char) -> {
+          let o = single_char(char)
+          to_nfa_loop(rest, o, list.append(stack, [o]))
+        }
+        Operator(variant) -> {
+          case variant {
+            Asterix(_) -> {
+              case one_step_stack(stack) {
+                Error(err) -> Error(err)
+                Ok(#(stk, o)) -> to_nfa_loop(rest, o, stk)
+              }
+            }
+            QMark(_) -> {
+              case two_step_nfa(stack, concat) {
+                Error(err) -> Error(err)
+                Ok(#(stk, o)) -> to_nfa_loop(rest, o, stk)
+              }
+            }
+            Plus(_) -> {
+              case two_step_nfa(stack, union) {
+                Error(err) -> Error(err)
+                Ok(#(stk, o)) -> to_nfa_loop(rest, o, stk)
+              }
+            }
+            _ -> todo
+          }
+        }
+        _ -> todo
+      }
+    }
+  }
+}
+
+fn one_step_stack(
+  stack: List(machine.NFA),
+) -> Result(#(List(machine.NFA), machine.NFA), String) {
+  case stack {
+    [] -> Error("Stack is not supposed to be empty")
+    [val, ..rest] -> {
+      let o = closure(val)
+      let stk = list.append(rest, [o])
+      Ok(#(stk, o))
+    }
+  }
+}
+
+fn two_step_nfa(
+  stack: List(machine.NFA),
+  func: fn(machine.NFA, machine.NFA) -> machine.NFA,
+) -> Result(#(List(machine.NFA), machine.NFA), String) {
+  case stack {
+    [] -> Error("Stack is not supposed to be empty")
+    [_] -> Error("Expected 2 nfa's on the stack, got only one")
+    [first, second, ..rest] -> {
+      let o = func(first, second)
+      let stk = list.append(rest, [o])
+      Ok(#(stk, o))
+    }
+  }
+}
 
 fn single_char(char: String) -> machine.NFA {
   machine.new()
@@ -13,13 +88,13 @@ fn single_char(char: String) -> machine.NFA {
   |> machine.add_transition("q0", "q1", state.CharacterMatcher(char))
 }
 
-fn epsilon(char: String) -> machine.NFA {
-  machine.new()
-  |> machine.declare_states(["q0", "q1"])
-  |> machine.set_initial_state("q0")
-  |> machine.set_ending_states(["q1"])
-  |> machine.add_transition("q0", "q1", state.EpsilonMatcher)
-}
+// fn epsilon() -> machine.NFA {
+//   machine.new()
+//   |> machine.declare_states(["q0", "q1"])
+//   |> machine.set_initial_state("q0")
+//   |> machine.set_ending_states(["q1"])
+//   |> machine.add_transition("q0", "q1", state.EpsilonMatcher)
+// }
 
 fn closure(a: machine.NFA) -> machine.NFA {
   let last_state = "q" <> int.to_string(dict.size(a.states) + 1)
@@ -35,6 +110,51 @@ fn closure(a: machine.NFA) -> machine.NFA {
   |> machine.add_transition("q0", last_state, state.EpsilonMatcher)
   |> machine.set_initial_state("q0")
   |> machine.set_ending_states([last_state])
+}
+
+fn concat(a: machine.NFA, b: machine.NFA) -> machine.NFA {
+  let new_b = update_nfa_labels(b, dict.size(a.states))
+  let new =
+    machine.NFA(
+      states: dict.merge(a.states, new_b.states),
+      initial_state: a.initial_state,
+      ending_states: b.ending_states,
+    )
+  transition_ending_states(
+    new,
+    a.ending_states,
+    b.initial_state,
+    state.EpsilonMatcher,
+  )
+}
+
+fn union(a: machine.NFA, b: machine.NFA) -> machine.NFA {
+  let size_a = dict.size(a.states)
+  let size_b = dict.size(b.states)
+  let last_state = update_label("q0", 1 + size_a + size_b)
+  let new_a = update_nfa_labels(a, 1)
+  let new_b = update_nfa_labels(b, 1 + size_a)
+
+  machine.NFA(
+    states: dict.merge(new_a.states, new_b.states),
+    initial_state: "",
+    ending_states: [],
+  )
+  |> machine.declare_states(["q0", last_state])
+  |> machine.set_initial_state("q0")
+  |> machine.set_ending_states([last_state])
+  |> machine.add_transition("q0", new_a.initial_state, state.EpsilonMatcher)
+  |> machine.add_transition("q0", new_b.initial_state, state.EpsilonMatcher)
+  |> transition_ending_states(
+    new_a.ending_states,
+    last_state,
+    state.EpsilonMatcher,
+  )
+  |> transition_ending_states(
+    new_b.ending_states,
+    last_state,
+    state.EpsilonMatcher,
+  )
 }
 
 fn transition_ending_states(
