@@ -10,7 +10,11 @@ import grammar/lexer.{
 pub type Stack =
   List(OperatorVariant(Int))
 
-pub fn shunt(
+pub fn shunt(input: List(Token)) -> Result(List(Token), String) {
+  shunt_loop(input, [], [])
+}
+
+fn shunt_loop(
   input: List(Token),
   output: List(Token),
   stack: Stack,
@@ -21,21 +25,21 @@ pub fn shunt(
     }
     [tok, ..rest] -> {
       case tok {
-        Letter(_) -> shunt(rest, list.append(output, [tok]), stack)
+        Letter(_) -> shunt_loop(rest, list.append(output, [tok]), stack)
         CParen -> {
           case find_oparen(output, stack) {
             Ok(#(o, s)) -> {
-              shunt(rest, o, s)
+              shunt_loop(rest, o, s)
             }
             Error(err) -> Error(err)
           }
         }
         Operator(opvar) -> {
           case opvar {
-            OParen -> shunt(rest, output, list.prepend(stack, opvar))
+            OParen -> shunt_loop(rest, output, list.prepend(stack, opvar))
             Asterix(p) | Plus(p) | QMark(p) -> {
               let #(o, s) = handle_operator(output, stack, opvar, p)
-              shunt(rest, o, s)
+              shunt_loop(rest, o, s)
             }
           }
         }

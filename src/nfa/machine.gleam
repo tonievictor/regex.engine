@@ -1,5 +1,4 @@
 import gleam/dict
-import gleam/io
 import gleam/list
 import gleam/string
 import nfa/state
@@ -54,10 +53,10 @@ pub fn add_transition(
   matcher: state.Matcher,
 ) -> NFA {
   let assert Ok(from_state) = dict.get(machine.states, from)
-  let assert Ok(to_state) = dict.get(machine.states, to)
+  let assert Ok(_) = dict.get(machine.states, to)
 
   let transitions =
-    state.add_transition(from_state.transitions, #(matcher, to_state))
+    state.add_transition(from_state.transitions, #(matcher, to))
   let new_state = state.State(name: from_state.name, transitions: transitions)
 
   NFA(
@@ -84,7 +83,6 @@ fn process_stack(
   input: String,
   history: List(String),
 ) -> Bool {
-  io.debug(stack)
   case stack {
     [] -> False
     [value] -> {
@@ -135,7 +133,7 @@ fn process_transitions(
   case transitions {
     [] -> #(stack, history)
     [#(matcher, to_state), ..rest] -> {
-      let assert Ok(to_state) = dict.get(machine.states, to_state.name)
+      let assert Ok(to_state) = dict.get(machine.states, to_state)
       case state.matches(matcher, char) {
         True -> {
           case state.is_epsilon(matcher) {

@@ -14,16 +14,15 @@ pub type Token {
   Operator(variant: OperatorVariant(Int))
 }
 
-pub fn tokenize(
-  tokens: List(Token),
-  input: String,
-  index: Int,
-  capacity: Int,
-) -> List(Token) {
-  case index == capacity {
-    True -> tokens
-    False -> {
-      let char = string.slice(input, index, 1)
+pub fn tokenize(input: String) -> List(Token) {
+  let in = string.to_graphemes(input)
+  tokenize_loop(in, [])
+}
+
+fn tokenize_loop(input: List(String), tokens: List(Token)) -> List(Token) {
+  case input {
+    [] -> tokens
+    [char, ..rest] -> {
       let tok = case char {
         "*" -> Operator(Asterix(3))
         "?" -> Operator(QMark(2))
@@ -32,7 +31,7 @@ pub fn tokenize(
         ")" -> CParen
         _ -> Letter(char)
       }
-      tokenize(list.append(tokens, [tok]), input, index + 1, capacity)
+      tokenize_loop(rest, list.append(tokens, [tok]))
     }
   }
 }

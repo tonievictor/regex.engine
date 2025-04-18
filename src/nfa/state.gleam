@@ -1,7 +1,7 @@
 import gleam/list
 
 pub type Transition =
-  #(Matcher, State)
+  #(Matcher, String)
 
 pub type State {
   State(name: String, transitions: List(Transition))
