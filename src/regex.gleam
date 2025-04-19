@@ -1,18 +1,22 @@
 import gleam/io
+import grammar
 import nfa/machine
-import nfa/state
+import nfa/thompson
 
 pub fn main() {
-  let engine =
-    machine.new()
-    |> machine.declare_states(["q0", "q1", "q2", "q3"])
-    |> machine.set_initial_state("q0")
-    |> machine.set_ending_states(["q3"])
-    |> machine.add_transition("q0", "q3", state.EpsilonMatcher)
-    |> machine.add_transition("q0", "q1", state.EpsilonMatcher)
-    |> machine.add_transition("q1", "q2", state.CharacterMatcher("b"))
-    |> machine.add_transition("q2", "q2", state.CharacterMatcher("b"))
-    |> machine.add_transition("q2", "q3", state.EpsilonMatcher)
+  let assert Ok(engine) = new("a?b")
+  io.debug(compute(engine, "ab"))
+}
 
-  io.debug(machine.evaluate(engine, "bbbbbb"))
+pub fn new(expression: String) -> Result(machine.NFA, String) {
+  case grammar.shunt(expression) {
+    Error(err) -> Error(err)
+    Ok(toks) -> {
+      thompson.to_nfa(toks)
+    }
+  }
+}
+
+pub fn compute(engine: machine.NFA, input: String) -> Bool {
+  machine.evaluate(engine, input)
 }

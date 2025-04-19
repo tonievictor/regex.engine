@@ -1,17 +1,65 @@
-// this module is an implementation of the Shunting-Yard Algorithm 
-// SYA is used to convert the grammar from infix notation to postfix notation
-
 import gleam/list
-import grammar/lexer.{
-  type OperatorVariant, type Token, Asterix, CParen, Letter, OParen, Operator,
-  Plus, QMark,
+import gleam/string
+
+pub type OperatorVariant(prec) {
+  OParen
+  Asterix(prec)
+  Plus(prec)
+  QMark(prec)
 }
 
-pub type Stack =
+pub type Token {
+  CParen
+  Letter(char: String)
+  Operator(variant: OperatorVariant(Int))
+}
+
+fn tokenize(input: List(String), tokens: List(Token)) -> List(Token) {
+  case input {
+    [] -> tokens
+    [char, ..rest] -> {
+      let tok = case char {
+        "*" -> Operator(Asterix(3))
+        "?" -> Operator(QMark(2))
+        "+" -> Operator(Plus(1))
+        "(" -> Operator(OParen)
+        ")" -> CParen
+        _ -> Letter(char)
+      }
+      tokenize(rest, list.append(tokens, [tok]))
+    }
+  }
+}
+
+pub fn to_string(tokens: List(Token), output: String) -> String {
+  case tokens {
+    [] -> output
+    [tok, ..rest] -> {
+      case tok {
+        CParen -> to_string(rest, string.append(output, ")"))
+        Letter(char) -> to_string(rest, string.append(output, char))
+        Operator(variant) -> {
+          case variant {
+            OParen -> to_string(rest, string.append(output, "("))
+            Asterix(_) -> to_string(rest, string.append(output, "*"))
+            Plus(_) -> to_string(rest, string.append(output, "+"))
+            QMark(_) -> to_string(rest, string.append(output, "?"))
+          }
+        }
+      }
+    }
+  }
+}
+
+// this is an implementation of the Shunting-Yard Algorithm 
+// SYA is used to convert the grammar from infix notation to postfix notation
+type Stack =
   List(OperatorVariant(Int))
 
-pub fn shunt(input: List(Token)) -> Result(List(Token), String) {
-  shunt_loop(input, [], [])
+pub fn shunt(input: String) -> Result(List(Token), String) {
+  let in = string.to_graphemes(input)
+  tokenize(in, [])
+  |> shunt_loop([], [])
 }
 
 fn shunt_loop(

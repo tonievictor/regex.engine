@@ -114,16 +114,14 @@ fn closure(a: machine.NFA) -> machine.NFA {
 
 fn concat(a: machine.NFA, b: machine.NFA) -> machine.NFA {
   let new_b = update_nfa_labels(b, dict.size(a.states))
-  let new =
-    machine.NFA(
-      states: dict.merge(a.states, new_b.states),
-      initial_state: a.initial_state,
-      ending_states: b.ending_states,
-    )
-  transition_ending_states(
-    new,
+  machine.NFA(
+    states: dict.merge(a.states, new_b.states),
+    initial_state: a.initial_state,
+    ending_states: new_b.ending_states,
+  )
+  |> transition_ending_states(
     a.ending_states,
-    b.initial_state,
+    new_b.initial_state,
     state.EpsilonMatcher,
   )
 }
@@ -233,7 +231,7 @@ fn update_transition_labels(
 }
 
 fn update_label(str: String, n: Int) -> String {
-  let assert Ok(number) = int.parse(string.crop(str, "q"))
+  let assert Ok(number) = int.parse(string.drop_start(str, 1))
   let label = number + n
   string.slice(str, 0, 1) <> int.to_string(label)
 }

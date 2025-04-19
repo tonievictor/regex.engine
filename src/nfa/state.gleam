@@ -1,3 +1,4 @@
+import gleam/io
 import gleam/list
 
 pub type Transition =
