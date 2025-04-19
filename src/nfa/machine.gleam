@@ -1,4 +1,5 @@
 import gleam/dict
+import gleam/io
 import gleam/list
 import gleam/string
 import nfa/state
@@ -55,8 +56,7 @@ pub fn add_transition(
   let assert Ok(from_state) = dict.get(machine.states, from)
   let assert Ok(_) = dict.get(machine.states, to)
 
-  let transitions =
-    state.add_transition(from_state.transitions, #(matcher, to))
+  let transitions = state.add_transition(from_state.transitions, #(matcher, to))
   let new_state = state.State(name: from_state.name, transitions: transitions)
 
   NFA(
@@ -71,6 +71,7 @@ pub type StackValue {
 }
 
 pub fn evaluate(machine: NFA, input: String) -> Bool {
+  io.debug(machine)
   let assert Ok(c) = dict.get(machine.states, machine.initial_state)
   let stack = [StackValue(i: 0, state: c)]
 

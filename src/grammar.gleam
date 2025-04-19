@@ -141,7 +141,7 @@ fn find_oparen(
   stack: Stack,
 ) -> Result(#(List(Token), Stack), String) {
   case stack {
-    [] -> Error("Could not find a corresponding opening bracket on the stack")
+    [] -> Error("Trailing closing bracket found in the regular expression.")
     [opval, ..rest] -> {
       case opval {
         OParen -> Ok(#(output, rest))

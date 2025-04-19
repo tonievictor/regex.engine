@@ -27,26 +27,37 @@ fn to_nfa_loop(
           case variant {
             Asterix(_) -> {
               case one_step_stack(stack) {
-                Error(err) -> Error(err)
+                Error(err) ->
+                  Error(
+                    err
+                    <> ". Hint: closure requires 1 preceding character (ie. a*)",
+                  )
                 Ok(#(stk, o)) -> to_nfa_loop(rest, o, stk)
               }
             }
             QMark(_) -> {
               case two_step_nfa(stack, concat) {
-                Error(err) -> Error(err)
+                Error(err) ->
+                  Error(
+                    err
+                    <> ". Hint: concatenation '?' requires 2 characters (ie. a?b)",
+                  )
                 Ok(#(stk, o)) -> to_nfa_loop(rest, o, stk)
               }
             }
             Plus(_) -> {
               case two_step_nfa(stack, union) {
-                Error(err) -> Error(err)
+                Error(err) ->
+                  Error(
+                    err <> ". Hint: union '+' requires 2 characters (ie. a+b)",
+                  )
                 Ok(#(stk, o)) -> to_nfa_loop(rest, o, stk)
               }
             }
-            _ -> todo
+            _ -> Error("Trailing opening bracket found in the regular expression.")
           }
         }
-        _ -> todo
+        _ ->Error("Trailing closing bracket found in the regular expression.") 
       }
     }
   }
@@ -56,7 +67,7 @@ fn one_step_stack(
   stack: List(machine.NFA),
 ) -> Result(#(List(machine.NFA), machine.NFA), String) {
   case stack {
-    [] -> Error("Stack is not supposed to be empty")
+    [] -> Error("Expected 1 nfa on the stack, got none")
     [val, ..rest] -> {
       let o = closure(val)
       let stk = list.append(rest, [o])
@@ -87,14 +98,6 @@ fn single_char(char: String) -> machine.NFA {
   |> machine.set_ending_states(["q1"])
   |> machine.add_transition("q0", "q1", state.CharacterMatcher(char))
 }
-
-// fn epsilon() -> machine.NFA {
-//   machine.new()
-//   |> machine.declare_states(["q0", "q1"])
-//   |> machine.set_initial_state("q0")
-//   |> machine.set_ending_states(["q1"])
-//   |> machine.add_transition("q0", "q1", state.EpsilonMatcher)
-// }
 
 fn closure(a: machine.NFA) -> machine.NFA {
   let last_state = "q" <> int.to_string(dict.size(a.states) + 1)
