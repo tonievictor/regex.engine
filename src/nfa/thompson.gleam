@@ -108,7 +108,7 @@ fn closure(a: machine.NFA) -> machine.NFA {
     subject.initial_state,
     state.EpsilonMatcher,
   )
-  |> transition_ending_states(subject.ending_states, "q0", state.EpsilonMatcher)
+  |> transition_ending_states(subject.ending_states, last_state, state.EpsilonMatcher)
   |> machine.add_transition("q0", subject.initial_state, state.EpsilonMatcher)
   |> machine.add_transition("q0", last_state, state.EpsilonMatcher)
   |> machine.set_initial_state("q0")
