@@ -1,6 +1,6 @@
 # rexen
 
-[![Package Version](https://img.shields.io/hexpm/v/rexen)](https://hex.pm/packages/regex)
+[![Package Version](https://img.shields.io/hexpm/v/rexen)](https://hex.pm/packages/rexen)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/rexen/)
 
 ```sh
