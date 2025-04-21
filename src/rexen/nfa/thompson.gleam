@@ -2,9 +2,9 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
-import grammar.{type Token, Asterix, Letter, Operator, Plus, QMark}
-import nfa/machine
-import nfa/state
+import rexen/grammar.{type Token, Asterix, Letter, Operator, Plus, QMark}
+import rexen/nfa/machine
+import rexen/nfa/state
 
 pub fn to_nfa(input: List(Token)) -> Result(machine.NFA, String) {
   case input == [] {

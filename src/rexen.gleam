@@ -1,11 +1,11 @@
 import gleam/io
-import grammar
-import nfa/machine
-import nfa/thompson
+import rexen/grammar
+import rexen/nfa/machine
+import rexen/nfa/thompson
 
 pub fn main() {
   let assert Ok(engine) = new("a?b")
-  io.debug(compute(engine, "ab"))
+  io.debug(compute(engine, "a"))
 }
 
 pub fn new(expression: String) -> Result(machine.NFA, String) {
