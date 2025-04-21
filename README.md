@@ -10,7 +10,11 @@ gleam add rexen@1
 import rexen
 
 pub fn main() {
-  // TODO: An example of the project in use
+    let assert Ok(nfa) = rexen.new("(a?b)*")
+    rexen.compute(nfa, "ab") // -> True
+    rexen.compute(nfa, "ababab") // -> True
+    rexen.compute(nfa, "ababa") // -> False
+    rexen.compute(nfa, "a") // -> False
 }
 ```
 
