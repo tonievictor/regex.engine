@@ -15,7 +15,7 @@ import rexen/nfa/thompson
 /// ```gleam
 /// import rexen
 ///
-/// case rexen.new("a*b") {
+/// case rexen.new("a?b") {
 ///   Ok(_) -> io.println("All good")
 ///   Error(err) -> io.println(err)
 /// }
