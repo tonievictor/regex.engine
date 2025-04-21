@@ -7,7 +7,15 @@ import nfa/machine
 import nfa/state
 
 pub fn to_nfa(input: List(Token)) -> Result(machine.NFA, String) {
-  to_nfa_loop(input, machine.new(), [])
+  case input == [] {
+    True -> {
+      let empt = empty_expr()
+      Ok(closure(empt))
+    }
+    False -> {
+      to_nfa_loop(input, machine.new(), [])
+    }
+  }
 }
 
 fn to_nfa_loop(
@@ -54,10 +62,11 @@ fn to_nfa_loop(
                 Ok(#(stk, o)) -> to_nfa_loop(rest, o, stk)
               }
             }
-            _ -> Error("Trailing opening bracket found in the regular expression.")
+            _ ->
+              Error("Trailing opening bracket found in the regular expression.")
           }
         }
-        _ ->Error("Trailing closing bracket found in the regular expression.") 
+        _ -> Error("Trailing closing bracket found in the regular expression.")
       }
     }
   }
@@ -91,6 +100,14 @@ fn two_step_nfa(
   }
 }
 
+fn empty_expr() -> machine.NFA {
+  machine.new()
+  |> machine.declare_states(["q0", "q1"])
+  |> machine.set_initial_state("q0")
+  |> machine.set_ending_states(["q1"])
+  |> machine.add_transition("q0", "q1", state.AnyMatcher)
+}
+
 fn single_char(char: String) -> machine.NFA {
   machine.new()
   |> machine.declare_states(["q0", "q1"])
@@ -108,7 +125,11 @@ fn closure(a: machine.NFA) -> machine.NFA {
     subject.initial_state,
     state.EpsilonMatcher,
   )
-  |> transition_ending_states(subject.ending_states, last_state, state.EpsilonMatcher)
+  |> transition_ending_states(
+    subject.ending_states,
+    last_state,
+    state.EpsilonMatcher,
+  )
   |> machine.add_transition("q0", subject.initial_state, state.EpsilonMatcher)
   |> machine.add_transition("q0", last_state, state.EpsilonMatcher)
   |> machine.set_initial_state("q0")

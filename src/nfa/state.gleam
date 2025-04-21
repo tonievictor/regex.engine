@@ -10,6 +10,7 @@ pub type State {
 pub type Matcher {
   CharacterMatcher(char: String)
   EpsilonMatcher
+  AnyMatcher
 }
 
 pub fn new(name: String) -> State {
@@ -22,6 +23,7 @@ pub fn matches(m: Matcher, c: String) -> Bool {
     CharacterMatcher(a) -> {
       a == c
     }
+    AnyMatcher -> True
   }
 }
 
@@ -29,6 +31,7 @@ pub fn is_epsilon(m: Matcher) -> Bool {
   case m {
     EpsilonMatcher -> True
     CharacterMatcher(_) -> False
+    AnyMatcher -> False
   }
 }
 
