@@ -4,7 +4,7 @@
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/rexen/)
 
 ```sh
-gleam add rexen@1
+gleam add rexen
 ```
 ```gleam
 import rexen
