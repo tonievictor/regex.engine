@@ -9,57 +9,63 @@ import rexen/nfa/state
 pub fn to_nfa(input: List(Token)) -> Result(machine.NFA, String) {
   case input == [] {
     True -> {
-      let empt = empty_expr()
-      Ok(closure(empt))
+      Ok(closure(empty_expr()))
     }
     False -> {
-      to_nfa_loop(input, machine.new(), [])
+      to_nfa_loop(input, [])
     }
   }
 }
 
 fn to_nfa_loop(
   input: List(Token),
-  output: machine.NFA,
   stack: List(machine.NFA),
 ) -> Result(machine.NFA, String) {
   case input {
-    [] -> Ok(output)
+    [] -> {
+      case list.first(stack) {
+        Ok(nfa) -> Ok(nfa)
+        Error(_) -> Error("")
+      }
+    }
     [tok, ..rest] -> {
       case tok {
         Letter(char) -> {
-          let o = single_char(char)
-          to_nfa_loop(rest, o, list.append(stack, [o]))
+          let nfa = single_char(char)
+          to_nfa_loop(rest, list.prepend(stack, nfa))
         }
         Operator(variant) -> {
           case variant {
             Asterix(_) -> {
               case one_step_stack(stack) {
-                Error(err) ->
+                Error(err) -> {
                   Error(
                     err
                     <> ". Hint: closure requires 1 preceding character (ie. a*)",
                   )
-                Ok(#(stk, o)) -> to_nfa_loop(rest, o, stk)
+                }
+                Ok(new_stack) -> to_nfa_loop(rest, new_stack)
               }
             }
             QMark(_) -> {
-              case two_step_nfa(stack, concat) {
-                Error(err) ->
+              case two_step_stack(stack, concat) {
+                Error(err) -> {
                   Error(
                     err
                     <> ". Hint: concatenation '?' requires 2 characters (ie. a?b)",
                   )
-                Ok(#(stk, o)) -> to_nfa_loop(rest, o, stk)
+                }
+                Ok(new_stack) -> to_nfa_loop(rest, new_stack)
               }
             }
             Plus(_) -> {
-              case two_step_nfa(stack, union) {
-                Error(err) ->
+              case two_step_stack(stack, union) {
+                Error(err) -> {
                   Error(
                     err <> ". Hint: union '+' requires 2 characters (ie. a+b)",
                   )
-                Ok(#(stk, o)) -> to_nfa_loop(rest, o, stk)
+                }
+                Ok(new_stack) -> to_nfa_loop(rest, new_stack)
               }
             }
             _ ->
@@ -72,30 +78,26 @@ fn to_nfa_loop(
   }
 }
 
-fn one_step_stack(
-  stack: List(machine.NFA),
-) -> Result(#(List(machine.NFA), machine.NFA), String) {
+fn one_step_stack(stack: List(machine.NFA)) -> Result(List(machine.NFA), String) {
   case stack {
     [] -> Error("Expected 1 nfa on the stack, got none")
     [val, ..rest] -> {
-      let o = closure(val)
-      let stk = list.append(rest, [o])
-      Ok(#(stk, o))
+      let nfa = closure(val)
+      Ok(list.prepend(rest, nfa))
     }
   }
 }
 
-fn two_step_nfa(
+fn two_step_stack(
   stack: List(machine.NFA),
   func: fn(machine.NFA, machine.NFA) -> machine.NFA,
-) -> Result(#(List(machine.NFA), machine.NFA), String) {
+) -> Result(List(machine.NFA), String) {
   case stack {
     [] -> Error("Stack is not supposed to be empty")
-    [_] -> Error("Expected 2 nfa's on the stack, got only one")
+    [_] -> Error("Expected at least 2 nfa's on the stack, got only one")
     [first, second, ..rest] -> {
-      let o = func(first, second)
-      let stk = list.append(rest, [o])
-      Ok(#(stk, o))
+      let nfa = func(second, first)
+      Ok(list.prepend(rest, nfa))
     }
   }
 }
