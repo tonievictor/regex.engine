@@ -4,7 +4,7 @@ import gleam/string
 pub type OperatorVariant(prec) {
   OParen
   Asterix(prec)
-  Plus(prec)
+  Bar(prec)
   QMark(prec)
 }
 
@@ -21,7 +21,7 @@ fn tokenize(input: List(String), tokens: List(Token)) -> List(Token) {
       let tok = case char {
         "*" -> Operator(Asterix(3))
         "?" -> Operator(QMark(2))
-        "+" -> Operator(Plus(1))
+        "|" -> Operator(Bar(1))
         "(" -> Operator(OParen)
         ")" -> CParen
         _ -> Letter(char)
@@ -42,7 +42,7 @@ pub fn to_string(tokens: List(Token), output: String) -> String {
           case variant {
             OParen -> to_string(rest, string.append(output, "("))
             Asterix(_) -> to_string(rest, string.append(output, "*"))
-            Plus(_) -> to_string(rest, string.append(output, "+"))
+            Bar(_) -> to_string(rest, string.append(output, "+"))
             QMark(_) -> to_string(rest, string.append(output, "?"))
           }
         }
@@ -85,7 +85,7 @@ fn shunt_loop(
         Operator(opvar) -> {
           case opvar {
             OParen -> shunt_loop(rest, output, list.prepend(stack, opvar))
-            Asterix(p) | Plus(p) | QMark(p) -> {
+            Asterix(p) | Bar(p) | QMark(p) -> {
               let #(o, s) = handle_operator(output, stack, opvar, p)
               shunt_loop(rest, o, s)
             }
@@ -117,7 +117,7 @@ fn handle_operator(
     [opvar, ..rest] -> {
       case opvar {
         OParen -> #(output, list.prepend(stack, variant))
-        Asterix(p) | Plus(p) | QMark(p) -> {
+        Asterix(p) | Bar(p) | QMark(p) -> {
           case precedence > p {
             True -> {
               #(output, list.prepend(stack, variant))

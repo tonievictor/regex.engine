@@ -2,7 +2,7 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
-import rexen/grammar.{type Token, Asterix, Letter, Operator, Plus, QMark}
+import rexen/grammar.{type Token, Asterix, Letter, Operator, Bar, QMark}
 import rexen/nfa/machine
 import rexen/nfa/state
 
@@ -58,7 +58,7 @@ fn to_nfa_loop(
                 Ok(new_stack) -> to_nfa_loop(rest, new_stack)
               }
             }
-            Plus(_) -> {
+            Bar(_) -> {
               case two_step_stack(stack, union) {
                 Error(err) -> {
                   Error(
