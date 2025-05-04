@@ -7,7 +7,7 @@ version = "1.1.0"
 description = "Compile and evaluate regular expressions using Non-deterministic Finite Automata (NFAs)."
 licences = ["Apache-2.0"]
 repository = { type = "github", user = "tonievictor", repo = "rexen" }
-links = [{ title = "Portfolio", href = "https://tonie.me" }]
+#links = [{ title = "Website", href = "" }]
 #
 # For a full reference of all the available options, you can have a look at
 # https://gleam.run/writing-gleam/gleam-toml/.
