@@ -1,5 +1,5 @@
 name = "rexen"
-version = "1.0.0"
+version = "1.1.0"
 
 # Fill out these fields if you intend to generate HTML documentation or publish
 # your project to the Hex package manager.
@@ -7,7 +7,7 @@ version = "1.0.0"
 description = "Compile and evaluate regular expressions using Non-deterministic Finite Automata (NFAs)."
 licences = ["Apache-2.0"]
 repository = { type = "github", user = "tonievictor", repo = "rexen" }
-# links = [{ title = "Website", href = "" }]
+links = [{ title = "Portfolio", href = "https://tonie.me" }]
 #
 # For a full reference of all the available options, you can have a look at
 # https://gleam.run/writing-gleam/gleam-toml/.

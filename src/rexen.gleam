@@ -15,7 +15,7 @@ import rexen/nfa/thompson
 /// ```gleam
 /// import rexen
 ///
-/// case rexen.new("a?b") {
+/// case rexen.new("ab") {
 ///   Ok(_) -> io.println("All good")
 ///   Error(err) -> io.println(err)
 /// }
@@ -38,7 +38,7 @@ pub fn new(expression: String) -> Result(machine.NFA, String) {
 /// ```gleam
 /// import rexen
 ///
-/// let assert Ok(nfa) = rexen.new("(a?b)*")
+/// let assert Ok(nfa) = rexen.new("(ab)*")
 /// rexen.compute(nfa, "ab") // -> True
 /// rexen.compute(nfa, "ababab") // -> True
 /// rexen.compute(nfa, "ababa") // -> False

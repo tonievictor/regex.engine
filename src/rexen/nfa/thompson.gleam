@@ -2,7 +2,7 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
-import rexen/grammar.{type Token, Asterix, Letter, Operator, Bar, Dot}
+import rexen/grammar.{type Token, Asterix, Bar, Dot, Letter, Operator}
 import rexen/nfa/machine
 import rexen/nfa/state
 
