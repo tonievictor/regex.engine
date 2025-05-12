@@ -122,7 +122,7 @@ pub fn to_string(tokens: List(Token), output: String) -> String {
             OParen -> to_string(rest, string.append(output, "("))
             Asterix(_) -> to_string(rest, string.append(output, "*"))
             Bar(_) -> to_string(rest, string.append(output, "+"))
-            Dot(_) -> to_string(rest, string.append(output, "?"))
+            Dot(_) -> to_string(rest, output)
           }
         }
       }
