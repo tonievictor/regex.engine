@@ -6,6 +6,7 @@ pub type OperatorVariant(prec) {
   Asterix(prec)
   Bar(prec)
   Dot(prec)
+  QMark(prec)
 }
 
 pub type Token {
@@ -20,6 +21,7 @@ fn tokenize(input: List(String), tokens: List(Token)) -> List(Token) {
     [char, ..rest] -> {
       let tok = case char {
         "*" -> Operator(Asterix(3))
+        "?" -> Operator(QMark(3))
         "|" -> Operator(Bar(1))
         "(" -> Operator(OParen)
         ")" -> CParen
@@ -123,6 +125,7 @@ pub fn to_string(tokens: List(Token), output: String) -> String {
             Asterix(_) -> to_string(rest, string.append(output, "*"))
             Bar(_) -> to_string(rest, string.append(output, "|"))
             Dot(_) -> to_string(rest, output)
+            QMark(_) -> to_string(rest, string.append(output, "?"))
           }
         }
       }
@@ -165,7 +168,7 @@ fn shunt_loop(
         Operator(opvar) -> {
           case opvar {
             OParen -> shunt_loop(rest, output, list.prepend(stack, opvar))
-            Asterix(p) | Bar(p) | Dot(p) -> {
+            Asterix(p) | Bar(p) | Dot(p) | QMark(p) -> {
               let #(o, s) = handle_operator(output, stack, opvar, p)
               shunt_loop(rest, o, s)
             }
@@ -197,7 +200,7 @@ fn handle_operator(
     [opvar, ..rest] -> {
       case opvar {
         OParen -> #(output, list.prepend(stack, variant))
-        Asterix(p) | Bar(p) | Dot(p) -> {
+        Asterix(p) | Bar(p) | Dot(p) | QMark(p) -> {
           case precedence > p {
             True -> {
               #(output, list.prepend(stack, variant))

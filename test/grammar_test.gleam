@@ -1,7 +1,7 @@
 import gleam/list
 import gleeunit/should
 import rexen/grammar.{
-  type Token, Asterix, Bar, CParen, Dot, Letter, OParen, Operator,
+  type Token, Asterix, Bar, CParen, Dot, Letter, OParen, Operator, QMark,
 }
 
 pub fn to_string_test() {
@@ -27,9 +27,17 @@ pub fn to_string_test() {
       Operator(Bar(1)),
       Operator(Dot(2)),
     ],
+    [
+      Operator(OParen),
+      Letter("a"),
+      Operator(Dot(2)),
+      Letter("b"),
+      CParen,
+      Operator(QMark(3)),
+    ],
   ]
   to_string_loop(tokens, [])
-  |> should.equal(["(ab)*", "a*b*cde|"])
+  |> should.equal(["(ab)*", "a*b*cde|", "(ab)?"])
 }
 
 fn to_string_loop(
