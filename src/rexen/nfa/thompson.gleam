@@ -52,10 +52,8 @@ fn to_nfa_loop(
             QMark(_) -> {
               case one_step_stack(stack, zero_or_one) {
                 Error(err) -> {
-                  Error(
-                    err <> ". Hint: zero or one (QMark) requires 1 preceding
-										character (ie. a?)",
-                  )
+                  Error(err <> ". Hint: zero or one (QMark) requires 1 preceding
+										character (ie. a?)")
                 }
                 Ok(new_stack) -> to_nfa_loop(rest, new_stack)
               }
@@ -63,10 +61,8 @@ fn to_nfa_loop(
             Plus(_) -> {
               case one_step_stack(stack, one_or_more) {
                 Error(err) -> {
-                  Error(
-                    err <> ". Hint: one or more (Plus) requires 1 preceding
-										character (ie. a+)",
-                  )
+                  Error(err <> ". Hint: one or more (Plus) requires 1 preceding
+										character (ie. a+)")
                 }
                 Ok(new_stack) -> to_nfa_loop(rest, new_stack)
               }
