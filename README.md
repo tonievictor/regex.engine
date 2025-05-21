@@ -26,6 +26,7 @@ Rexen supports a core set of regular expression operations, including:
 | `+` | One or more of the preceding character or group of characters | `a+` | "a", "aa", "aaa" |
 | `?` | Zero or one of the preceding character or group of characters | `a?` | "", "a" |
 | `\|` | Matches either the expression before or after the operator | `a\|b` | "a", "b" |
+| `()` | Groups characters or expressions | `(ab)+` | "ab", "abab", "ababab" |
 
 > Note: Concatenation is implicit in rexen. ie the expression `abc` matches `a`
 > followed by `b` and `c` - "abc"
