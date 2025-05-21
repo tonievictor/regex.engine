@@ -2,7 +2,7 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/string
-import rexen/grammar.{type Token, Asterix, Bar, Dot, Letter, Operator}
+import rexen/grammar.{type Token, Asterix, Bar, Dot, Letter, Operator, QMark}
 import rexen/nfa/machine
 import rexen/nfa/state
 
@@ -37,11 +37,22 @@ fn to_nfa_loop(
         Operator(variant) -> {
           case variant {
             Asterix(_) -> {
-              case one_step_stack(stack) {
+              case one_step_stack(stack, closure) {
                 Error(err) -> {
                   Error(
                     err
                     <> ". Hint: closure requires 1 preceding character (ie. a*)",
+                  )
+                }
+                Ok(new_stack) -> to_nfa_loop(rest, new_stack)
+              }
+            }
+            QMark(_) -> {
+              case one_step_stack(stack, zero_or_one) {
+                Error(err) -> {
+                  Error(
+                    err <> ". Hint: zero or more (QMark) requires 1 preceding
+										character (ie. a?)",
                   )
                 }
                 Ok(new_stack) -> to_nfa_loop(rest, new_stack)
@@ -78,11 +89,15 @@ fn to_nfa_loop(
   }
 }
 
-fn one_step_stack(stack: List(machine.NFA)) -> Result(List(machine.NFA), String) {
+// fn zero_or_more(a: machine.NFA) -> machine.NFA {
+fn one_step_stack(
+  stack: List(machine.NFA),
+  func: fn(machine.NFA) -> machine.NFA,
+) -> Result(List(machine.NFA), String) {
   case stack {
     [] -> Error("Expected 1 nfa on the stack, got none")
     [val, ..rest] -> {
-      let nfa = closure(val)
+      let nfa = func(val)
       Ok(list.prepend(rest, nfa))
     }
   }
@@ -116,6 +131,21 @@ fn single_char(char: String) -> machine.NFA {
   |> machine.set_initial_state("q0")
   |> machine.set_ending_states(["q1"])
   |> machine.add_transition("q0", "q1", state.CharacterMatcher(char))
+}
+
+fn zero_or_one(a: machine.NFA) -> machine.NFA {
+  let last_state = "q" <> int.to_string(dict.size(a.states) + 1)
+  let subject = update_nfa_labels(a, 1)
+  machine.declare_states(subject, ["q0", last_state])
+  |> transition_ending_states(
+    subject.ending_states,
+    last_state,
+    state.EpsilonMatcher,
+  )
+  |> machine.add_transition("q0", subject.initial_state, state.EpsilonMatcher)
+  |> machine.add_transition("q0", last_state, state.EpsilonMatcher)
+  |> machine.set_initial_state("q0")
+  |> machine.set_ending_states([last_state])
 }
 
 fn closure(a: machine.NFA) -> machine.NFA {
