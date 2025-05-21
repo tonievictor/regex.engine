@@ -18,11 +18,22 @@ pub fn main() {
 }
 ```
 
+## Features
+Rexen supports a core set of regular expression operations, including:
+| Operator | Description | Expression | Matches |
+| -------- | ----------- | ---------- | ------- |
+| `*` | Zero or more of the preceding character or group of characters | `a*` | "", "a", "aa" "aaa" |
+| `+` | One or more of the preceding character or group of characters | `a+` | "a", "aa", "aaa" |
+| `?` | Zero or one of the preceding character or group of characters | `a?` | "", "a" |
+| `|` | Matches either the expression before or after the operator | `a|b` | "a", "b" |
+
+> Note: Concatenation is implicit in rexen. ie the expression `abc` matches `a`
+> followed by `b` and `c` - "abc"
+
 Further documentation can be found at <https://hexdocs.pm/rexen>.
 
 ## Development
 
 ```sh
-gleam run   # Run the project
 gleam test  # Run the tests
 ```
